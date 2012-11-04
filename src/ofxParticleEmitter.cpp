@@ -343,10 +343,12 @@ void ofxParticleEmitter::update()
 	
 	// If the emitter is active and the emission rate is greater than zero then emit
 	// particles
-	if(active && emissionRate) {
+	if(active && emissionRate)
+	{
 		float rate = 1.0f/emissionRate;
 		emitCounter += aDelta;
-		while(particleCount < maxParticles && emitCounter > rate) {
+		while(particleCount < maxParticles && emitCounter > rate)
+		{
 			addParticle();
 			emitCounter -= rate;
 		}
@@ -462,16 +464,8 @@ void ofxParticleEmitter::draw(int x /* = 0 */, int y /* = 0 */)
 	glPushMatrix();
 	glTranslatef( x, y, 0.0f );
 	
-#ifdef TARGET_OF_IPHONE
-	
-	drawPointsOES();
-	
-#else
-	
 	drawTextures();
 	//drawPoints();
-	
-#endif
 	
 	glPopMatrix();
 }
@@ -487,7 +481,7 @@ void ofxParticleEmitter::drawTextures()
 		ofSetColor( ps->color.red*255.0f, ps->color.green*255.0f, 
 				   ps->color.blue*255.0f, ps->color.alpha*255.0f );
         //ofEnableAlphaBlending();
-		texture->draw( ps->x, ps->y, ps->size, ps->size );
+		texture->draw( ps->x+(ps->size/2), ps->y+(ps->size/2), ps->size, ps->size );
         //ofDisableAlphaBlending();
 	}
 	
@@ -499,70 +493,10 @@ void ofxParticleEmitter::drawTextures()
 // size or color values. I left it here in case anyone wants to fix it :)
 void ofxParticleEmitter::drawPoints()
 {
-	// Disable the texture coord array so that texture information is not copied over when rendering
-	// the point sprites.
-	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
 	
-	// Bind to the verticesID VBO and popuate it with the necessary vertex & color informaiton
-	glBindBuffer(GL_ARRAY_BUFFER, verticesID);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(PointSprite) * maxParticles, vertices, GL_DYNAMIC_DRAW);
+#ifdef TARGET_OPENGLES
 	
-	// Configure the vertex pointer which will use the currently bound VBO for its data
-	glVertexPointer(2, GL_FLOAT, sizeof(PointSprite), 0);
-	glColorPointer(4,GL_FLOAT,sizeof(PointSprite),(GLvoid*) (sizeof(GLfloat)*3));
-	
-	// Bind to the particles texture
-	glBindTexture(GL_TEXTURE_2D, (GLuint)textureData.textureID);
-	
-	// Enable the point size array
-	
-	
-	//glEnableClientState(GL_POINT_SIZE_ARRAY_OES);
-	
-	
-	// Configure the point size pointer which will use the currently bound VBO.  PointSprite contains
-	// both the location of the point as well as its size, so the config below tells the point size
-	// pointer where in the currently bound VBO it can find the size for each point
-	
-	
-	//glPointSizePointerOES(GL_FLOAT,sizeof(PointSprite),(GLvoid*) (sizeof(GL_FLOAT)*2));
-	
-	
-	// Change the blend function used if blendAdditive has been set
-	
-    // Set the blend function based on the configuration
-    glBlendFunc(blendFuncSource, blendFuncDestination);
-	
-	// Enable and configure point sprites which we are going to use for our particles
-	glEnable(GL_POINT_SPRITE);
-	glTexEnvi( GL_POINT_SPRITE, GL_COORD_REPLACE, GL_TRUE );
-	
-	// Now that all of the VBOs have been used to configure the vertices, pointer size and color
-	// use glDrawArrays to draw the points
-	glDrawArrays(GL_POINTS, 0, particleIndex);
-	
-	// Unbind the current VBO
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	
-	// Disable the client states which have been used incase the next draw function does 
-	// not need or use them
-	
-	
-	//glDisableClientState(GL_POINT_SIZE_ARRAY_OES);
-	
-	
-	glDisable(GL_POINT_SPRITE);
-	
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	
-	// Re-enable the texture coordinates as we use them elsewhere in the game and it is expected that
-	// its on
-	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-}
-
-void ofxParticleEmitter::drawPointsOES()
-{
-#ifdef TARGET_OF_IPHONE
+	// Draw points for OpenGLES (iOS / Android / Mobile )
 	
 	// Disable the texture coord array so that texture information is not copied over when rendering
 	// the point sprites.
@@ -603,7 +537,7 @@ void ofxParticleEmitter::drawPointsOES()
 	// Unbind the current VBO
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	
-	// Disable the client states which have been used incase the next draw function does 
+	// Disable the client states which have been used incase the next draw function does
 	// not need or use them
 	glDisableClientState(GL_POINT_SIZE_ARRAY_OES);
 	glDisable(GL_POINT_SPRITE_OES);
@@ -614,7 +548,72 @@ void ofxParticleEmitter::drawPointsOES()
 	// its on
 	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 	
-#endif
+#else
+	// Draw Points for OpenGL
+	
+	// Disable the texture coord array so that texture information is not copied over when rendering
+	// the point sprites.
+	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+	
+	// Bind to the verticesID VBO and popuate it with the necessary vertex & color informaiton
+	glBindBuffer(GL_ARRAY_BUFFER, verticesID);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(PointSprite) * maxParticles, vertices, GL_DYNAMIC_DRAW);
+	
+	// Configure the vertex pointer which will use the currently bound VBO for its data
+	glVertexPointer(2, GL_FLOAT, sizeof(PointSprite), 0);
+	glColorPointer(4,GL_FLOAT,sizeof(PointSprite),(GLvoid*) (sizeof(GLfloat)*3));
+	
+	// Bind to the particles texture
+	glBindTexture(GL_TEXTURE_2D, (GLuint)textureData.textureID);
+	
+	// Enable the point size array
+	
+	
+	//glEnableClientState(GL_POINT_SIZE_ARRAY_OES);
+	
+	
+	// Configure the point size pointer which will use the currently bound VBO.  PointSprite contains
+	// both the location of the point as well as its size, so the config below tells the point size
+	// pointer where in the currently bound VBO it can find the size for each point
+	
+	
+	//glPointSizePointerOES(GL_FLOAT,sizeof(PointSprite),(GLvoid*) (sizeof(GL_FLOAT)*2));
+	
+	
+	// Change the blend function used if blendAdditive has been set
+	
+    // Set the blend function based on the configuration
+    glBlendFunc(blendFuncSource, blendFuncDestination);
+	
+	// Enable and configure point sprites which we are going to use for our particles
+	glEnable(GL_POINT_SPRITE);
+	glTexEnvi( GL_POINT_SPRITE, GL_COORD_REPLACE, GL_TRUE );
+	//glEnable(GL_POINT_SPRITE_OES);
+	//glTexEnvi( GL_POINT_SPRITE_OES, GL_COORD_REPLACE_OES, GL_TRUE );
+	
+	// Now that all of the VBOs have been used to configure the vertices, pointer size and color
+	// use glDrawArrays to draw the points
+	glDrawArrays(GL_POINTS, 0, particleIndex);
+	
+	// Unbind the current VBO
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	
+	// Disable the client states which have been used incase the next draw function does 
+	// not need or use them
+	
+	
+	//glDisableClientState(GL_POINT_SIZE_ARRAY_OES);
+	
+	//glDisable(GL_POINT_SPRITE_OES);
+	glDisable(GL_POINT_SPRITE);
+	
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	
+	// Re-enable the texture coordinates as we use them elsewhere in the game and it is expected that
+	// its on
+	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+	
+	#endif
 }
 
 void ofxParticleEmitter::changeTexture(string filename) {

@@ -154,13 +154,13 @@ static inline Vector2f Vector2fNormalize(Vector2f v) {
 	return Vector2fMultiply(v, 1.0f/Vector2fLength(v));
 }
 
-#define MAXIMUM_UPDATE_RATE 90.0f	// The maximum number of updates that occur per frame
+#define MAXIMUM_UPDATE_RATE 60.0f	// The maximum number of updates that occur per frame
 
 // ------------------------------------------------------------------------
 // ofxParticleEmitter
 // ------------------------------------------------------------------------
 
-class ofxParticleEmitter 
+class ofxParticleEmitter
 {
 	
 public:
@@ -169,8 +169,8 @@ public:
 	~ofxParticleEmitter();
 	
 	bool	loadFromXml( const std::string& filename );
-	void	update();
-	void	draw( int x = 0, int y = 0 );
+	virtual void	update();
+	virtual void	draw( int x = 0, int y = 0 );
 	void	exit();
     string  getTextureName();
     void    changeTexture(string filename);
@@ -201,18 +201,19 @@ public:
 	GLfloat			rotatePerSecond;				// Number of degrees to rotate a particle around the source position per second
 	GLfloat			rotatePerSecondVariance;		// Variance in degrees for rotatePerSecond
 	
+	virtual void	stopParticleEmitter();
+	
 protected:
 	
 	void	parseParticleConfig();
 	void	setupArrays();
 	
-	void	stopParticleEmitter();
-	bool	addParticle();
-	void	initParticle( Particle* particle );
+	
+	virtual bool	addParticle();
+	virtual void	initParticle( Particle* particle );
 	
 	void	drawTextures();
 	void	drawPoints();
-	void	drawPointsOES();
 	
 	ofxXmlSettings*	settings;
 
